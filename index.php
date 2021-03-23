@@ -7,11 +7,24 @@ class Shop
     static public $startShop = false;
     static public $workCashShop = [];
 
+    static public function createRandomPerson()
+    {
+        $amountRandomPerson = rand(0, 3);
+        print_r("Пользователей зашло в магазин  " . $amountRandomPerson . "  ");
+
+        for ($i = 0; $i < $amountRandomPerson; $i++) {
+            $newPerson = new Person();
+            $newPerson->visitShop($amountRandomPerson);
+        }
+        Person::searchCashShop($amountRandomPerson);
+    }
+
     public function startShop()
     {
         self::$startShop = true;
         for ($i = 0; $i < self::$MAX_CASH_BOX; $i++) {
             $newCashShop = new CashShop();
+
             array_push(Shop::$workCashShop, $newCashShop);
         }
     }
@@ -22,37 +35,52 @@ class CashShop extends Shop
     public $personInLine = 0;
     public $isWork = false;
     static public $MAX_PERSON = 5;
+
+    static public function servedPerson()
+    {
+        for ($i = 0; $i < Shop::$MAX_CASH_BOX; $i++) {
+            if (Shop::$workCashShop[$i]->isWork && Shop::$workCashShop[$i]->personInLine > 0) {
+                Shop::$workCashShop[$i]->personInLine -= 1;
+                if (Shop::$workCashShop[$i]->personInLine === 0) {
+                    Shop::$workCashShop[$i]->isWork = false;
+                }
+            }
+        }
+    }
 }
 
 class Person
 {
-    public function visitShop()
+    public function visitShop($amountRandomPerson)
     {
-        Shop::$personInShop += 1;
+        Shop::$personInShop += $amountRandomPerson;
     }
 
-    public function searchCashShop()
+    static public function searchCashShop($amountRandomPerson)
     {
         for ($i = 0; $i < Shop::$MAX_CASH_BOX; $i++) {
-            //search valid cash shop and add person on line valid cash shop
+            if (Shop::$workCashShop[$i]->personInLine > CashShop::$MAX_PERSON - 1){
+                continue;
+            }
+
             if (Shop::$workCashShop[$i]->isWork) {
-
                 if (Shop::$workCashShop[$i]->personInLine < CashShop::$MAX_PERSON - 1) {
-                    Shop::$workCashShop[$i]->personInLine += 1;
-                    var_dump(Shop::$workCashShop[$i]);
+                    Shop::$workCashShop[$i]->personInLine += $amountRandomPerson;
                     break;
+                    //Если много пользователей нужно добавить перенос пользователей
+//                    if (Shop::$workCashShop[$i]->personInLine + CashShop::$MAX_PERSON - 1) {
+//                        if (Shop::$workCashShop[$i]->personInLine > )
+//                    } else {
+//                        Shop::$workCashShop[$i]->personInLine += $amountRandomPerson;
+//                    }
                 } else {
-                    foreach (Shop::$workCashShop as $item) {
-
-                        //проверить если в 3 кассах забита очередь, или добавить в след кассу
-                        var_dump($item->isWork);
-                    }
+                    //Добавить проверку на то что в магазине не закончились кассы
+                    Shop::$workCashShop[$i++]->isWork = true;
+                    Shop::$workCashShop[$i++]->personInLine += $amountRandomPerson;
                 }
-
             } else {
                 Shop::$workCashShop[$i]->isWork = true;
-                Shop::$workCashShop[$i]->personInLine += 1;
-                var_dump(Shop::$workCashShop[$i]);
+                Shop::$workCashShop[$i]->personInLine += $amountRandomPerson;
                 break;
             }
         }
@@ -63,60 +91,11 @@ $openShop = new Shop();
 $openShop->startShop();
 
 while (Shop::$startShop) {
-    $newPerson = new Person();
-    $newPerson->visitShop();
-    $newPerson->searchCashShop();
-    sleep(3);
+    print_r("///");
+    Shop::createRandomPerson();
+    for ($i = 0; $i < Shop::$MAX_CASH_BOX; $i++) {
+        print(Shop::$workCashShop[$i]->personInLine . " из " . CashShop::$MAX_PERSON . "     ");
+    }
+    sleep(5);
+    CashShop::servedPerson();
 }
-
-//------------------------------
-//        class CashShop extends Shop
-//        {
-//            static public $personInLine = [];
-//            public $MAX_PERSON = 3;
-//        }
-//
-//        class FactoryCashShop extends CashShop
-//        {
-//            public function addPersonInLine()
-//            {
-//                if (count(Shop::$workCashShop) === 0) {
-//                    $newCashShop = new CashShop();
-//                    CashShop::$personInLine = Shop::$personInShop;
-//                    array(Shop::$workCashShop, $newCashShop);
-//
-//                } else if (count(Shop::$personInShop) <= 5) {
-//                    array(CashShop::$personInLine, Shop::$personInShop);
-//                } else{
-//                    var_dump('Нужна новая касса');
-//                }
-//            }
-//        }
-//
-//        class Person
-//        {
-//            public $id = null;
-//            public $standingInLine = false;
-//            public $shopTime = 3;
-//        }
-//
-//        class FactoryPerson extends Person
-//        {
-//            public function setInterval()
-//            {
-//                while (Shop::$startShop) {
-//                    $newPerson = new Person();
-//                    //кидаю новых персонов которые в магазине
-//                    $newPerson->standingInLine = !$newPerson->standingInLine;
-//                    array_push(Shop::$personInShop, $newPerson);
-//                    sleep(1);
-//                    $newCashShop = new FactoryCashShop();
-//                    $newCashShop->addPersonInline();
-//                    array_push(Shop::$workCashShop, $newCashShop);
-//                }
-//            }
-//        }
-//
-//
-//        $setInterval = new FactoryPerson();
-//        $setInterval->setInterval();
